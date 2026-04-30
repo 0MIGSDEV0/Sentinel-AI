@@ -32,7 +32,7 @@ h1 {
     background: rgba(255,255,255,0.03);
 }
 
-/* 🎯 NOTAS PIXEL PERFECT */
+/* NOTAS */
 .note {
     width: 100%;
     height: 60px;
@@ -42,16 +42,15 @@ h1 {
     box-shadow: 0 0 8px;
 }
 
-/* CORES */
 .red { background: red; box-shadow: 0 0 10px red; }
 .yellow { background: yellow; box-shadow: 0 0 10px yellow; }
 .blue { background: dodgerblue; box-shadow: 0 0 10px dodgerblue; }
 .green { background: limegreen; box-shadow: 0 0 10px limegreen; }
 
-/* 🔲 HITBOX PIXEL PERFECT */
+/* HITBOX */
 .hitbox {
     position: absolute;
-    bottom: 60px; /* mais baixo = mais preciso */
+    bottom: 60px;
     left: 5px;
     right: 5px;
     height: 60px;
@@ -66,13 +65,6 @@ h1 {
 #hud {
     font-size: 18px;
     margin-top: 10px;
-}
-
-#feedback {
-    font-size: 30px;
-    height: 40px;
-    margin-top: 10px;
-    font-weight: bold;
 }
 
 #combo {
@@ -106,8 +98,6 @@ button {
 🔥 Combo: <span id="combo">0</span>
 </div>
 
-<div id="feedback"></div>
-
 <div id="player"></div>
 
 <div class="game">
@@ -125,7 +115,6 @@ let jogoRodando = false;
 let score = 0;
 let combo = 0;
 
-// ================= YOUTUBE =================
 function onYouTubeIframeAPIReady() {
     player = new YT.Player('player', {
         height: '0',
@@ -139,7 +128,6 @@ let tag = document.createElement('script');
 tag.src = "https://www.youtube.com/iframe_api";
 document.body.appendChild(tag);
 
-// ================= JOGO =================
 const lanes = [
     document.getElementById("lane1"),
     document.getElementById("lane2"),
@@ -154,7 +142,6 @@ const BPM = 220;
 const intervaloNotas = 60000 / BPM;
 const velocidade = 9;
 
-// ================= INICIAR =================
 function iniciarJogo() {
     if (!player) return;
 
@@ -174,7 +161,6 @@ function iniciarJogo() {
     loopNotas();
 }
 
-// ================= NOTAS =================
 function criarNota() {
     const laneIndex = Math.floor(Math.random() * 4);
     const note = document.createElement("div");
@@ -195,7 +181,6 @@ function criarNota() {
             note.remove();
 
             combo = 0;
-            mostrarFeedback("MISS", "red");
             updateHUD();
         }
     }, 20);
@@ -208,22 +193,11 @@ function loopNotas() {
     setTimeout(loopNotas, intervaloNotas);
 }
 
-// ================= FEEDBACK =================
-function mostrarFeedback(texto, cor) {
-    const fb = document.getElementById("feedback");
-    fb.innerText = texto;
-    fb.style.color = cor;
-
-    setTimeout(() => fb.innerText = "", 400);
-}
-
-// ================= HUD =================
 function updateHUD() {
     document.getElementById("score").innerText = score;
     document.getElementById("combo").innerText = combo;
 }
 
-// ================= HIT =================
 document.addEventListener("keydown", (e) => {
     const index = teclas.indexOf(e.key);
     if (index === -1) return;
@@ -237,19 +211,15 @@ document.addEventListener("keydown", (e) => {
 
         let pontos = 0;
 
-        // 🎯 PIXEL PERFECT HITBOX
         if (pos > 340 && pos < 400) {
-            mostrarFeedback("PERFECT", "lime");
             pontos = 20;
             combo++;
         }
         else if (pos > 280 && pos < 460) {
-            mostrarFeedback("GOOD", "yellow");
             pontos = 10;
             combo++;
         }
         else {
-            mostrarFeedback("OK", "orange");
             pontos = 5;
             combo = 0;
         }
