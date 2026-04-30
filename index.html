@@ -25,47 +25,64 @@ h1 {
 .lane {
     width: 85px;
     height: 420px;
-    border: 2px solid rgba(255,255,255,0.3);
+    border: 2px solid rgba(255,255,255,0.2);
     margin: 5px;
     position: relative;
     overflow: hidden;
     background: rgba(255,255,255,0.03);
 }
 
+/* 🎨 NOTAS */
 .note {
     width: 100%;
     height: 20px;
-    background: red;
     position: absolute;
     top: 0;
     border-radius: 6px;
-    box-shadow: 0 0 8px red;
+    box-shadow: 0 0 8px;
 }
 
-.hit {
+.red { background: red; box-shadow: 0 0 10px red; }
+.yellow { background: yellow; box-shadow: 0 0 10px yellow; }
+.blue { background: dodgerblue; box-shadow: 0 0 10px dodgerblue; }
+.green { background: limegreen; box-shadow: 0 0 10px limegreen; }
+
+/* 🔲 HITBOX VISÍVEL */
+.hitbox {
     position: absolute;
-    bottom: 0;
-    height: 12px;
-    width: 100%;
-    background: yellow;
-    box-shadow: 0 0 10px yellow;
+    bottom: 120px;
+    left: 5px;
+    right: 5px;
+    height: 80px;
+
+    border: 3px solid cyan;
+    border-radius: 10px;
+
+    background: rgba(0,255,255,0.08);
+    box-shadow: 0 0 15px cyan;
 }
 
-#player {
-    position: absolute;
-    left: -9999px;
-}
-
+/* HUD */
 #hud {
     font-size: 18px;
     margin-top: 10px;
 }
 
 #feedback {
-    font-size: 28px;
-    margin-top: 10px;
+    font-size: 30px;
     height: 40px;
+    margin-top: 10px;
     font-weight: bold;
+}
+
+#combo {
+    font-size: 18px;
+    color: cyan;
+}
+
+#player {
+    position: absolute;
+    left: -9999px;
 }
 
 button {
@@ -75,10 +92,6 @@ button {
     border: none;
     cursor: pointer;
     border-radius: 6px;
-}
-
-button:hover {
-    background: darkred;
 }
 </style>
 </head>
@@ -90,7 +103,8 @@ button:hover {
 <button onclick="iniciarJogo()">▶️ Começar</button>
 
 <div id="hud">
-🏆 Pontos: <span id="score">0</span>
+🏆 Pontos: <span id="score">0</span> |
+🔥 Combo: <span id="combo">0</span>
 </div>
 
 <div id="feedback"></div>
@@ -98,10 +112,10 @@ button:hover {
 <div id="player"></div>
 
 <div class="game">
-    <div class="lane" id="lane1"><div class="hit"></div></div>
-    <div class="lane" id="lane2"><div class="hit"></div></div>
-    <div class="lane" id="lane3"><div class="hit"></div></div>
-    <div class="lane" id="lane4"><div class="hit"></div></div>
+    <div class="lane" id="lane1"><div class="hitbox"></div></div>
+    <div class="lane" id="lane2"><div class="hitbox"></div></div>
+    <div class="lane" id="lane3"><div class="hitbox"></div></div>
+    <div class="lane" id="lane4"><div class="hitbox"></div></div>
 </div>
 
 <p>Teclas: Z X N M</p>
@@ -110,6 +124,7 @@ button:hover {
 let player;
 let jogoRodando = false;
 let score = 0;
+let combo = 0;
 
 // ================= YOUTUBE =================
 function onYouTubeIframeAPIReady() {
@@ -117,11 +132,7 @@ function onYouTubeIframeAPIReady() {
         height: '0',
         width: '0',
         videoId: 'E0ozmU9cJDg',
-        playerVars: {
-            autoplay: 0,
-            controls: 0,
-            mute: 1
-        }
+        playerVars: { autoplay: 0, controls: 0, mute: 1 }
     });
 }
 
@@ -137,8 +148,8 @@ const lanes = [
     document.getElementById("lane4")
 ];
 
-// 🎯 NOVAS TECLAS
 const teclas = ["z", "x", "n", "m"];
+const cores = ["red", "yellow", "blue", "green"];
 
 const BPM = 220;
 const intervaloNotas = 60000 / BPM;
@@ -149,8 +160,9 @@ function iniciarJogo() {
 
     jogoRodando = true;
     score = 0;
+    combo = 0;
 
-    document.getElementById("score").innerText = score;
+    updateHUD();
 
     player.playVideo();
 
@@ -165,7 +177,9 @@ function iniciarJogo() {
 function criarNota() {
     const laneIndex = Math.floor(Math.random() * 4);
     const note = document.createElement("div");
+
     note.classList.add("note");
+    note.classList.add(cores[laneIndex]);
 
     lanes[laneIndex].appendChild(note);
 
@@ -175,10 +189,13 @@ function criarNota() {
         pos += velocidade;
         note.style.top = pos + "px";
 
-        if (pos > 380) {
+        if (pos > 420) {
             clearInterval(intervalo);
             note.remove();
+
+            combo = 0;
             mostrarFeedback("MISS", "red");
+            updateHUD();
         }
     }, 20);
 }
@@ -196,41 +213,52 @@ function mostrarFeedback(texto, cor) {
     fb.innerText = texto;
     fb.style.color = cor;
 
-    setTimeout(() => {
-        fb.innerText = "";
-    }, 400);
+    setTimeout(() => fb.innerText = "", 400);
+}
+
+// ================= HUD =================
+function updateHUD() {
+    document.getElementById("score").innerText = score;
+    document.getElementById("combo").innerText = combo;
 }
 
 // ================= HIT =================
 document.addEventListener("keydown", (e) => {
     const index = teclas.indexOf(e.key);
+    if (index === -1) return;
 
-    if (index !== -1) {
-        const lane = lanes[index];
-        const notes = lane.getElementsByClassName("note");
+    const lane = lanes[index];
+    const notes = lane.getElementsByClassName("note");
 
-        if (notes.length > 0) {
-            const note = notes[0];
-            const pos = parseInt(note.style.top);
+    if (notes.length > 0) {
+        const note = notes[0];
+        const pos = parseInt(note.style.top);
 
-            if (pos > 320 && pos < 360) {
-                score += 15;
-                mostrarFeedback("PERFECT", "lime");
-            } 
-            else if (pos > 280 && pos < 400) {
-                score += 10;
-                mostrarFeedback("GOOD", "yellow");
-            } 
-            else {
-                score += 5;
-                mostrarFeedback("OK", "orange");
-            }
+        let pontos = 0;
 
-            document.getElementById("score").innerText = score;
-
-            note.style.background = "lime";
-            setTimeout(() => note.remove(), 50);
+        // 🔲 HITBOX REAL (ZONAS)
+        if (pos > 300 && pos < 360) {
+            mostrarFeedback("PERFECT", "lime");
+            pontos = 20;
+            combo++;
         }
+        else if (pos > 250 && pos < 420) {
+            mostrarFeedback("GOOD", "yellow");
+            pontos = 10;
+            combo++;
+        }
+        else {
+            mostrarFeedback("OK", "orange");
+            pontos = 5;
+            combo = 0;
+        }
+
+        score += pontos * Math.max(1, Math.floor(combo / 5));
+
+        updateHUD();
+
+        note.style.background = "white";
+        setTimeout(() => note.remove(), 50);
     }
 });
 </script>
