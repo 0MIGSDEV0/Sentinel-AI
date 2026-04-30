@@ -61,6 +61,13 @@ h1 {
     margin-top: 10px;
 }
 
+#feedback {
+    font-size: 28px;
+    margin-top: 10px;
+    height: 40px;
+    font-weight: bold;
+}
+
 button {
     padding: 8px 12px;
     background: red;
@@ -86,6 +93,8 @@ button:hover {
 🏆 Pontos: <span id="score">0</span>
 </div>
 
+<div id="feedback"></div>
+
 <div id="player"></div>
 
 <div class="game">
@@ -95,7 +104,7 @@ button:hover {
     <div class="lane" id="lane4"><div class="hit"></div></div>
 </div>
 
-<p>Teclas: A S D F</p>
+<p>Teclas: Z X N M</p>
 
 <script>
 let player;
@@ -127,6 +136,9 @@ const lanes = [
     document.getElementById("lane3"),
     document.getElementById("lane4")
 ];
+
+// 🎯 NOVAS TECLAS
+const teclas = ["z", "x", "n", "m"];
 
 const BPM = 220;
 const intervaloNotas = 60000 / BPM;
@@ -166,6 +178,7 @@ function criarNota() {
         if (pos > 380) {
             clearInterval(intervalo);
             note.remove();
+            mostrarFeedback("MISS", "red");
         }
     }, 20);
 }
@@ -177,9 +190,19 @@ function loopNotas() {
     setTimeout(loopNotas, intervaloNotas);
 }
 
-// 🎯 ACERTO
+// ================= FEEDBACK =================
+function mostrarFeedback(texto, cor) {
+    const fb = document.getElementById("feedback");
+    fb.innerText = texto;
+    fb.style.color = cor;
+
+    setTimeout(() => {
+        fb.innerText = "";
+    }, 400);
+}
+
+// ================= HIT =================
 document.addEventListener("keydown", (e) => {
-    const teclas = ["a", "s", "d", "f"];
     const index = teclas.indexOf(e.key);
 
     if (index !== -1) {
@@ -190,13 +213,23 @@ document.addEventListener("keydown", (e) => {
             const note = notes[0];
             const pos = parseInt(note.style.top);
 
-            if (pos > 300 && pos < 400) {
+            if (pos > 320 && pos < 360) {
+                score += 15;
+                mostrarFeedback("PERFECT", "lime");
+            } 
+            else if (pos > 280 && pos < 400) {
                 score += 10;
-                document.getElementById("score").innerText = score;
-
-                note.style.background = "lime";
-                setTimeout(() => note.remove(), 50);
+                mostrarFeedback("GOOD", "yellow");
+            } 
+            else {
+                score += 5;
+                mostrarFeedback("OK", "orange");
             }
+
+            document.getElementById("score").innerText = score;
+
+            note.style.background = "lime";
+            setTimeout(() => note.remove(), 50);
         }
     }
 });
