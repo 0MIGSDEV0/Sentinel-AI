@@ -101,9 +101,10 @@ const lanes = [
     document.getElementById("lane4")
 ];
 
-// 🎵 batida da música (~120 BPM ajustado manualmente)
-const BPM = 120;
+// 🔥 CONFIGURAÇÃO AJUSTADA
+const BPM = 220;
 const intervaloNotas = 60000 / BPM;
+const velocidade = 9;
 
 function iniciarJogo() {
     if (!player) return;
@@ -113,11 +114,10 @@ function iniciarJogo() {
 
     player.playVideo();
 
-    // tenta liberar som após interação
     setTimeout(() => {
         player.unMute();
         player.setVolume(100);
-    }, 500);
+    }, 300);
 
     loopNotas();
 }
@@ -130,8 +130,6 @@ function criarNota() {
     lanes[laneIndex].appendChild(note);
 
     let pos = 0;
-
-    const velocidade = 4;
 
     const intervalo = setInterval(() => {
         pos += velocidade;
@@ -150,11 +148,10 @@ function loopNotas() {
     if (!jogoRodando) return;
 
     criarNota();
-
     setTimeout(loopNotas, intervaloNotas);
 }
 
-// 🎯 DETECÇÃO DE ACERTO
+// 🎯 ACERTO
 document.addEventListener("keydown", (e) => {
     const teclas = ["a", "s", "d", "f"];
     const index = teclas.indexOf(e.key);
@@ -167,7 +164,6 @@ document.addEventListener("keydown", (e) => {
             const note = notes[0];
             const pos = parseInt(note.style.top);
 
-            // janela de acerto melhorada
             if (pos > 300 && pos < 400) {
                 score += 10;
                 document.getElementById("score").innerText = score;
