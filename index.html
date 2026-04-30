@@ -33,6 +33,7 @@ body {
     background: red;
     position: absolute;
     top: 0;
+    border-radius: 5px;
 }
 
 .hit {
@@ -41,6 +42,11 @@ body {
     height: 10px;
     width: 100%;
     background: yellow;
+}
+
+#player {
+    position: absolute;
+    left: -9999px;
 }
 </style>
 </head>
@@ -51,12 +57,9 @@ body {
 
 <button onclick="iniciarJogo()">▶️ Começar</button>
 
-<br><br>
+<h2>Pontos: <span id="score">0</span></h2>
 
-<!-- vídeo da música -->
-<iframe width="560" height="315"
-src="https://www.youtube.com/embed/E0ozmU9cJDg"
-frameborder="0" allowfullscreen></iframe>
+<div id="player"></div>
 
 <div class="game">
     <div class="lane" id="lane1"><div class="hit"></div></div>
@@ -66,9 +69,31 @@ frameborder="0" allowfullscreen></iframe>
 </div>
 
 <p>Teclas: A S D F</p>
-<h2>Pontos: <span id="score">0</span></h2>
 
 <script>
+let player;
+let jogoRodando = false;
+let score = 0;
+
+// ================= YOUTUBE =================
+function onYouTubeIframeAPIReady() {
+    player = new YT.Player('player', {
+        height: '0',
+        width: '0',
+        videoId: 'E0ozmU9cJDg',
+        playerVars: {
+            autoplay: 0,
+            controls: 0,
+            mute: 1
+        }
+    });
+}
+
+let tag = document.createElement('script');
+tag.src = "https://www.youtube.com/iframe_api";
+document.body.appendChild(tag);
+
+// ================= JOGO =================
 const lanes = [
     document.getElementById("lane1"),
     document.getElementById("lane2"),
@@ -76,11 +101,24 @@ const lanes = [
     document.getElementById("lane4")
 ];
 
-let jogoRodando = false;
-let score = 0;
+// 🎵 batida da música (~120 BPM ajustado manualmente)
+const BPM = 120;
+const intervaloNotas = 60000 / BPM;
 
 function iniciarJogo() {
+    if (!player) return;
+
     jogoRodando = true;
+    score = 0;
+
+    player.playVideo();
+
+    // tenta liberar som após interação
+    setTimeout(() => {
+        player.unMute();
+        player.setVolume(100);
+    }, 500);
+
     loopNotas();
 }
 
@@ -93,27 +131,30 @@ function criarNota() {
 
     let pos = 0;
 
+    const velocidade = 4;
+
     const intervalo = setInterval(() => {
-        pos += 5;
+        pos += velocidade;
         note.style.top = pos + "px";
 
         if (pos > 380) {
             clearInterval(intervalo);
             note.remove();
         }
-    }, 30);
+    }, 20);
 
     note.dataset.lane = laneIndex;
-    note.dataset.intervalo = intervalo;
 }
 
 function loopNotas() {
     if (!jogoRodando) return;
 
     criarNota();
-    setTimeout(loopNotas, 600);
+
+    setTimeout(loopNotas, intervaloNotas);
 }
 
+// 🎯 DETECÇÃO DE ACERTO
 document.addEventListener("keydown", (e) => {
     const teclas = ["a", "s", "d", "f"];
     const index = teclas.indexOf(e.key);
@@ -126,11 +167,13 @@ document.addEventListener("keydown", (e) => {
             const note = notes[0];
             const pos = parseInt(note.style.top);
 
-            // área de acerto
-            if (pos > 320 && pos < 400) {
+            // janela de acerto melhorada
+            if (pos > 300 && pos < 400) {
                 score += 10;
                 document.getElementById("score").innerText = score;
-                note.remove();
+
+                note.style.background = "lime";
+                setTimeout(() => note.remove(), 50);
             }
         }
     }
