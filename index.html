@@ -2,13 +2,14 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<title>Mini Guitar Hero</title>
+<title>Guitar Hero Web</title>
 
 <style>
 body {
     background: black;
     color: white;
     text-align: center;
+    font-family: Arial;
 }
 
 .game {
@@ -33,29 +34,39 @@ body {
     position: absolute;
     top: 0;
 }
+
+.hit {
+    position: absolute;
+    bottom: 0;
+    height: 10px;
+    width: 100%;
+    background: yellow;
+}
 </style>
 </head>
 
 <body>
 
-<h1>🎸 Guitar Hero</h1>
+<h1>🎸 Guitar Hero Web</h1>
 
 <button onclick="iniciarJogo()">▶️ Começar</button>
 
-<!-- música -->
-<iframe id="video"
-width="560" height="315"
-src="https://www.youtube.com/embed/E0ozmU9cJDg?enablejsapi=1"
+<br><br>
+
+<!-- vídeo da música -->
+<iframe width="560" height="315"
+src="https://www.youtube.com/embed/E0ozmU9cJDg"
 frameborder="0" allowfullscreen></iframe>
 
 <div class="game">
-    <div class="lane" id="lane1"></div>
-    <div class="lane" id="lane2"></div>
-    <div class="lane" id="lane3"></div>
-    <div class="lane" id="lane4"></div>
+    <div class="lane" id="lane1"><div class="hit"></div></div>
+    <div class="lane" id="lane2"><div class="hit"></div></div>
+    <div class="lane" id="lane3"><div class="hit"></div></div>
+    <div class="lane" id="lane4"><div class="hit"></div></div>
 </div>
 
 <p>Teclas: A S D F</p>
+<h2>Pontos: <span id="score">0</span></h2>
 
 <script>
 const lanes = [
@@ -66,6 +77,7 @@ const lanes = [
 ];
 
 let jogoRodando = false;
+let score = 0;
 
 function iniciarJogo() {
     jogoRodando = true;
@@ -82,7 +94,7 @@ function criarNota() {
     let pos = 0;
 
     const intervalo = setInterval(() => {
-        pos += 6;
+        pos += 5;
         note.style.top = pos + "px";
 
         if (pos > 380) {
@@ -90,18 +102,37 @@ function criarNota() {
             note.remove();
         }
     }, 30);
+
+    note.dataset.lane = laneIndex;
+    note.dataset.intervalo = intervalo;
 }
 
 function loopNotas() {
     if (!jogoRodando) return;
 
     criarNota();
-    setTimeout(loopNotas, 500);
+    setTimeout(loopNotas, 600);
 }
 
 document.addEventListener("keydown", (e) => {
-    if (["a", "s", "d", "f"].includes(e.key)) {
-        console.log("Tecla:", e.key);
+    const teclas = ["a", "s", "d", "f"];
+    const index = teclas.indexOf(e.key);
+
+    if (index !== -1) {
+        const lane = lanes[index];
+        const notes = lane.getElementsByClassName("note");
+
+        if (notes.length > 0) {
+            const note = notes[0];
+            const pos = parseInt(note.style.top);
+
+            // área de acerto
+            if (pos > 320 && pos < 400) {
+                score += 10;
+                document.getElementById("score").innerText = score;
+                note.remove();
+            }
+        }
     }
 });
 </script>
