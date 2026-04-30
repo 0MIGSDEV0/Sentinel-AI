@@ -2,11 +2,11 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<title>Guitar Hero Sync</title>
+<title>Guitar Hero Web</title>
 
 <style>
 body {
-    background: radial-gradient(circle at top, #111, #000);
+    background: radial-gradient(circle, #111, #000);
     color: white;
     text-align: center;
     font-family: Arial;
@@ -23,20 +23,19 @@ h1 {
 }
 
 .lane {
-    width: 90px;
-    height: 450px;
+    width: 85px;
+    height: 420px;
     border: 2px solid rgba(255,255,255,0.3);
-    margin: 6px;
+    margin: 5px;
     position: relative;
     overflow: hidden;
     background: rgba(255,255,255,0.03);
-    box-shadow: inset 0 0 10px rgba(255,0,0,0.2);
 }
 
 .note {
     width: 100%;
     height: 20px;
-    background: linear-gradient(red, darkred);
+    background: red;
     position: absolute;
     top: 0;
     border-radius: 6px;
@@ -57,12 +56,16 @@ h1 {
     left: -9999px;
 }
 
+#hud {
+    font-size: 18px;
+    margin-top: 10px;
+}
+
 button {
-    margin: 5px;
     padding: 8px 12px;
-    border: none;
     background: red;
     color: white;
+    border: none;
     cursor: pointer;
     border-radius: 6px;
 }
@@ -70,17 +73,12 @@ button {
 button:hover {
     background: darkred;
 }
-
-#hud {
-    margin-top: 10px;
-    font-size: 18px;
-}
 </style>
 </head>
 
 <body>
 
-<h1>🎸 Guitar Hero Sync</h1>
+<h1>🎸 Guitar Hero Web</h1>
 
 <button onclick="iniciarJogo()">▶️ Começar</button>
 
@@ -89,65 +87,34 @@ button:hover {
 ❤️ Vida: <span id="life">5</span>
 </div>
 
-<h3>Teclas: <span id="keysDisplay"></span></h3>
-
-<button onclick="mudarTecla(0)">Lane 1</button>
-<button onclick="mudarTecla(1)">Lane 2</button>
-<button onclick="mudarTecla(2)">Lane 3</button>
-<button onclick="mudarTecla(3)">Lane 4</button>
-
 <div id="player"></div>
 
 <div class="game">
-    <div class="lane" id="lane0"><div class="hit"></div></div>
     <div class="lane" id="lane1"><div class="hit"></div></div>
     <div class="lane" id="lane2"><div class="hit"></div></div>
     <div class="lane" id="lane3"><div class="hit"></div></div>
+    <div class="lane" id="lane4"><div class="hit"></div></div>
 </div>
 
+<p>Teclas: A S D F</p>
+
 <script>
-/* ===================== CHART ===================== */
-const chart = [
-    { time: 1.2, lane: 0 },
-    { time: 1.6, lane: 1 },
-    { time: 2.0, lane: 2 },
-    { time: 2.4, lane: 3 },
-    { time: 2.8, lane: 0 },
-    { time: 3.2, lane: 1 },
-    { time: 3.6, lane: 2 },
-    { time: 4.0, lane: 3 },
-];
-
-/* ===================== TECLAS ===================== */
-let teclas = ["a", "s", "d", "f"];
-
-function atualizarUI() {
-    document.getElementById("keysDisplay").innerText =
-        teclas.map((t, i) => `Lane ${i+1}: ${t.toUpperCase()}`).join(" | ");
-}
-atualizarUI();
-
-/* ===================== VARIÁVEIS ===================== */
 let player;
 let jogoRodando = false;
 let score = 0;
 let life = 5;
-let spawned = 0;
 
-const lanes = [
-    document.getElementById("lane0"),
-    document.getElementById("lane1"),
-    document.getElementById("lane2"),
-    document.getElementById("lane3"),
-];
-
-/* ===================== YOUTUBE ===================== */
+// ================= YOUTUBE =================
 function onYouTubeIframeAPIReady() {
     player = new YT.Player('player', {
         height: '0',
         width: '0',
         videoId: 'E0ozmU9cJDg',
-        playerVars: { autoplay: 0, controls: 0, mute: 1 }
+        playerVars: {
+            autoplay: 0,
+            controls: 0,
+            mute: 1
+        }
     });
 }
 
@@ -155,93 +122,93 @@ let tag = document.createElement('script');
 tag.src = "https://www.youtube.com/iframe_api";
 document.body.appendChild(tag);
 
-/* ===================== INICIAR ===================== */
+// ================= JOGO =================
+const lanes = [
+    document.getElementById("lane1"),
+    document.getElementById("lane2"),
+    document.getElementById("lane3"),
+    document.getElementById("lane4")
+];
+
+const BPM = 220;
+const intervaloNotas = 60000 / BPM;
+const velocidade = 9;
+
 function iniciarJogo() {
     if (!player) return;
 
+    jogoRodando = true;
     score = 0;
     life = 5;
-    spawned = 0;
-    jogoRodando = false;
 
     document.getElementById("score").innerText = score;
     document.getElementById("life").innerText = life;
 
-    player.seekTo(0);
     player.playVideo();
 
     setTimeout(() => {
         player.unMute();
         player.setVolume(100);
-        jogoRodando = true;
-        loop();
-    }, 1200);
+    }, 300);
+
+    loopNotas();
 }
 
-/* ===================== LOOP ===================== */
-function loop() {
-    if (!jogoRodando) return;
-
-    const currentTime = player.getCurrentTime();
-
-    while (spawned < chart.length && chart[spawned].time <= currentTime + 2) {
-        spawnNote(chart[spawned]);
-        spawned++;
-    }
-
-    requestAnimationFrame(loop);
-}
-
-/* ===================== SPAWN ===================== */
-function spawnNote(data) {
+function criarNota() {
+    const laneIndex = Math.floor(Math.random() * 4);
     const note = document.createElement("div");
     note.classList.add("note");
 
-    lanes[data.lane].appendChild(note);
+    lanes[laneIndex].appendChild(note);
 
     let pos = 0;
-    const speed = 9;
 
-    const interval = setInterval(() => {
-        pos += speed;
+    const intervalo = setInterval(() => {
+        pos += velocidade;
         note.style.top = pos + "px";
 
-        if (pos > 420) {
-            clearInterval(interval);
+        if (pos > 380) {
+            clearInterval(intervalo);
             note.remove();
 
-            loseLife(); // 💀 errou nota
+            perderVida(); // 💀 erro
         }
     }, 20);
 }
 
-/* ===================== HIT ===================== */
+function loopNotas() {
+    if (!jogoRodando) return;
+
+    criarNota();
+    setTimeout(loopNotas, intervaloNotas);
+}
+
+// 🎯 ACERTO
 document.addEventListener("keydown", (e) => {
+    const teclas = ["a", "s", "d", "f"];
     const index = teclas.indexOf(e.key);
-    if (index === -1) return;
 
-    const lane = lanes[index];
-    const notes = lane.getElementsByClassName("note");
+    if (index !== -1) {
+        const lane = lanes[index];
+        const notes = lane.getElementsByClassName("note");
 
-    if (notes.length > 0) {
-        const note = notes[0];
-        const rect = note.getBoundingClientRect();
-        const laneRect = lane.getBoundingClientRect();
+        if (notes.length > 0) {
+            const note = notes[0];
+            const pos = parseInt(note.style.top);
 
-        const pos = rect.top - laneRect.top;
+            if (pos > 300 && pos < 400) {
+                score += 10;
+                document.getElementById("score").innerText = score;
 
-        if (pos > 300 && pos < 380) {
-            score += 10;
-            document.getElementById("score").innerText = score;
-
-            note.style.background = "lime";
-            setTimeout(() => note.remove(), 50);
+                note.style.background = "lime";
+                setTimeout(() => note.remove(), 50);
+            }
         }
     }
 });
 
-/* ===================== VIDA ===================== */
-function loseLife() {
+// 💀 VIDA
+function perderVida() {
     life--;
     document.getElementById("life").innerText = life;
 
@@ -249,16 +216,6 @@ function loseLife() {
         jogoRodando = false;
         player.pauseVideo();
         alert("💀 GAME OVER! Pontos: " + score);
-    }
-}
-
-/* ===================== TECLAS ===================== */
-function mudarTecla(lane) {
-    const nova = prompt("Nova tecla para Lane " + (lane + 1)).toLowerCase();
-
-    if (nova && nova.length === 1) {
-        teclas[lane] = nova;
-        atualizarUI();
     }
 }
 </script>
