@@ -83,8 +83,7 @@ button:hover {
 <button onclick="iniciarJogo()">▶️ Começar</button>
 
 <div id="hud">
-🏆 Pontos: <span id="score">0</span> |
-❤️ Vida: <span id="life">5</span>
+🏆 Pontos: <span id="score">0</span>
 </div>
 
 <div id="player"></div>
@@ -102,7 +101,6 @@ button:hover {
 let player;
 let jogoRodando = false;
 let score = 0;
-let life = 5;
 
 // ================= YOUTUBE =================
 function onYouTubeIframeAPIReady() {
@@ -139,10 +137,8 @@ function iniciarJogo() {
 
     jogoRodando = true;
     score = 0;
-    life = 5;
 
     document.getElementById("score").innerText = score;
-    document.getElementById("life").innerText = life;
 
     player.playVideo();
 
@@ -170,8 +166,6 @@ function criarNota() {
         if (pos > 380) {
             clearInterval(intervalo);
             note.remove();
-
-            perderVida(); // 💀 erro
         }
     }, 20);
 }
@@ -206,18 +200,6 @@ document.addEventListener("keydown", (e) => {
         }
     }
 });
-
-// 💀 VIDA
-function perderVida() {
-    life--;
-    document.getElementById("life").innerText = life;
-
-    if (life <= 0) {
-        jogoRodando = false;
-        player.pauseVideo();
-        alert("💀 GAME OVER! Pontos: " + score);
-    }
-}
 </script>
 
 </body>
