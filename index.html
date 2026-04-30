@@ -44,10 +44,14 @@ body {
     background: yellow;
 }
 
-/* vídeo escondido */
 #player {
     position: absolute;
     left: -9999px;
+}
+
+button {
+    margin: 5px;
+    padding: 5px 10px;
 }
 </style>
 </head>
@@ -60,6 +64,13 @@ body {
 
 <h2>Pontos: <span id="score">0</span></h2>
 
+<h3>Teclas: <span id="keysDisplay"></span></h3>
+
+<button onclick="mudarTecla(0)">Lane 1</button>
+<button onclick="mudarTecla(1)">Lane 2</button>
+<button onclick="mudarTecla(2)">Lane 3</button>
+<button onclick="mudarTecla(3)">Lane 4</button>
+
 <div id="player"></div>
 
 <div class="game">
@@ -69,10 +80,10 @@ body {
     <div class="lane" id="lane3"><div class="hit"></div></div>
 </div>
 
-<p>Teclas: A S D F</p>
+<p>Use as teclas configuradas</p>
 
 <script>
-/* ===================== CHART (SINCRONIZAÇÃO REAL) ===================== */
+/* ===================== CHART ===================== */
 const chart = [
     { time: 1.2, lane: 0 },
     { time: 1.6, lane: 1 },
@@ -82,8 +93,16 @@ const chart = [
     { time: 3.2, lane: 1 },
     { time: 3.6, lane: 2 },
     { time: 4.0, lane: 3 },
-    { time: 4.5, lane: 0 },
 ];
+
+/* ===================== TECLAS ===================== */
+let teclas = ["a", "s", "d", "f"];
+
+function atualizarUI() {
+    document.getElementById("keysDisplay").innerText =
+        teclas.map((t, i) => `Lane ${i+1}: ${t.toUpperCase()}`).join(" | ");
+}
+atualizarUI();
 
 /* ===================== VARIÁVEIS ===================== */
 let player;
@@ -137,7 +156,7 @@ function iniciarJogo() {
     }, 1200);
 }
 
-/* ===================== LOOP SINCRONIZADO ===================== */
+/* ===================== LOOP SYNC ===================== */
 function loop() {
     if (!jogoRodando) return;
 
@@ -174,8 +193,7 @@ function spawnNote(data) {
 
 /* ===================== HIT ===================== */
 document.addEventListener("keydown", (e) => {
-    const keys = ["a", "s", "d", "f"];
-    const index = keys.indexOf(e.key);
+    const index = teclas.indexOf(e.key);
 
     if (index === -1) return;
 
@@ -184,7 +202,6 @@ document.addEventListener("keydown", (e) => {
 
     if (notes.length > 0) {
         const note = notes[0];
-
         const rect = note.getBoundingClientRect();
         const laneRect = lane.getBoundingClientRect();
 
@@ -193,12 +210,21 @@ document.addEventListener("keydown", (e) => {
         if (pos > 300 && pos < 380) {
             score += 10;
             document.getElementById("score").innerText = score;
-
             note.style.background = "lime";
             setTimeout(() => note.remove(), 50);
         }
     }
 });
+
+/* ===================== MUDAR TECLAS ===================== */
+function mudarTecla(lane) {
+    const nova = prompt("Nova tecla para Lane " + (lane + 1)).toLowerCase();
+
+    if (nova && nova.length === 1) {
+        teclas[lane] = nova;
+        atualizarUI();
+    }
+}
 </script>
 
 </body>
