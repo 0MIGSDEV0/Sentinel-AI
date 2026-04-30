@@ -33,7 +33,6 @@ body {
     background: red;
     position: absolute;
     top: 0;
-    border-radius: 5px;
 }
 
 .hit {
@@ -48,6 +47,14 @@ body {
     position: absolute;
     left: -9999px;
 }
+
+.keyBox {
+    margin-top: 10px;
+}
+button {
+    margin: 5px;
+    padding: 5px 10px;
+}
 </style>
 </head>
 
@@ -59,6 +66,16 @@ body {
 
 <h2>Pontos: <span id="score">0</span></h2>
 
+<div class="keyBox">
+    <h3>🎹 Teclas atuais:</h3>
+    <p id="keysDisplay"></p>
+
+    <button onclick="mudarTecla(0)">Mudar Lane 1</button>
+    <button onclick="mudarTecla(1)">Mudar Lane 2</button>
+    <button onclick="mudarTecla(2)">Mudar Lane 3</button>
+    <button onclick="mudarTecla(3)">Mudar Lane 4</button>
+</div>
+
 <div id="player"></div>
 
 <div class="game">
@@ -68,12 +85,20 @@ body {
     <div class="lane" id="lane4"><div class="hit"></div></div>
 </div>
 
-<p>Teclas: A S D F</p>
-
 <script>
 let player;
 let jogoRodando = false;
 let score = 0;
+
+// 🎯 teclas padrão (editável)
+let teclas = ["a", "s", "d", "f"];
+
+function atualizarUI() {
+    document.getElementById("keysDisplay").innerText =
+        teclas.map((t, i) => `Lane ${i+1}: ${t.toUpperCase()}`).join(" | ");
+}
+
+atualizarUI();
 
 // ================= YOUTUBE =================
 function onYouTubeIframeAPIReady() {
@@ -101,7 +126,6 @@ const lanes = [
     document.getElementById("lane4")
 ];
 
-// 🔥 CONFIGURAÇÃO AJUSTADA
 const BPM = 220;
 const intervaloNotas = 60000 / BPM;
 const velocidade = 9;
@@ -140,8 +164,6 @@ function criarNota() {
             note.remove();
         }
     }, 20);
-
-    note.dataset.lane = laneIndex;
 }
 
 function loopNotas() {
@@ -151,9 +173,8 @@ function loopNotas() {
     setTimeout(loopNotas, intervaloNotas);
 }
 
-// 🎯 ACERTO
+// 🎯 ACERTO COM TECLAS DINÂMICAS
 document.addEventListener("keydown", (e) => {
-    const teclas = ["a", "s", "d", "f"];
     const index = teclas.indexOf(e.key);
 
     if (index !== -1) {
@@ -174,6 +195,16 @@ document.addEventListener("keydown", (e) => {
         }
     }
 });
+
+// 🔁 mudar tecla
+function mudarTecla(lane) {
+    const nova = prompt("Digite a nova tecla para a Lane " + (lane+1)).toLowerCase();
+
+    if (nova && nova.length === 1) {
+        teclas[lane] = nova;
+        atualizarUI();
+    }
+}
 </script>
 
 </body>
